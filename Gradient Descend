@@ -1,0 +1,83 @@
+#Fetch the housing dataset
+import numpy as np
+import pandas as pd
+df = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data', header=None,sep='\s+')
+df.columns = ['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX',
+             'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO',
+             'B', 'LSTAT', 'MEDV']
+df.head()
+
+
+#Plotting the data
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(style='whitegrid', context='notebook')
+cols = ['LSTAT', 'INDUS', 'NOX', 'RM', 'MEDV', 'AGE']
+sns.pairplot(df[cols], size=3.5)
+plt.show()
+
+X = df[['RM']].values
+y = df[['MEDV']].values
+
+class NormalizationTransform(object):
+
+    def fit_normalization(self,X):
+        """Fit to data, then transform it."""
+        #YOUR CODE HERE
+        self.X_mean_ = X.mean()
+        self.X_sigma_ = X.std()
+        X_std = (X-self.X_mean_)/self.X_sigma_
+        return X_std
+
+    def normalization(self, X):
+        # YOUR CODE HERE
+        """Perform standardization by centering and scaling.
+           The center and the scale have already been computed by fit_normalization.
+           So just use them"""
+        return (X-self.X_mean_)/self.X_sigma_
+
+
+    def inverse_normalization(self,X_std):
+        # YOUR CODE HERE
+        """Scale back the data to the original representation"""
+        return (X_std*self.X_sigma_ + self.X_mean_)
+
+nt_x = NormalizationTransform(
+nt_y = NormalizationTransform()
+
+X_std_manual = nt_x.fit_normalization(X)
+y_std_manual = nt_y.fit_normalization(y)
+# remove single-dimensional entries from the shape of an array.
+# y shoud be a vector no a matrix
+y_std_manual = np.squeeze(y_std_manual)
+
+# Test:
+# we start with 5.0 value; we normalize it,
+# then we map the normalized value to the original space
+value = 5.0
+value_std = nt_x.normalization(value)
+print(value_std)
+value = nt_x.inverse_normalization(value_std)
+print(value)
+
+# Standardization Feature Normalization
+from sklearn.preprocessing import StandardScaler
+sc_x = StandardScaler()
+sc_y = StandardScaler()
+
+# Map X and y values into X_std and y_std
+X_std = sc_x.fit_transform(X)
+y_std = sc_y.fit_transform(y)
+# remove single-dimensional entries from the shape of an array.
+# y shoud be a vector no a matrix
+y_std = np.squeeze(y_std)
+
+# Map a value (for example 5.0) into the std space
+value = np.array([5.0])
+value = value.reshape(-1,1)
+value_std = sc_x.transform(value)
+print(value_std)
+
+## Map value_std in the original space
+value=sc_x.inverse_transform(value_std)
+print(value)
